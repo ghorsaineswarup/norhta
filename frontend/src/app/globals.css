@@ -1,26 +1,53 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg: #000000;
+  --color-bg-alt: #0a0a0a;
+  --color-card: #111111;
+  --color-text: #ffffff;
+  --color-text-dim: rgba(255, 255, 255, 0.5);
+  --color-text-faint: rgba(255, 255, 255, 0.35);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.2);
+  --color-accent: #ff6838;
+  --color-accent-dark: #c8501f;
+  --color-accent-fg: #000000;
+}
+
+[data-theme="light"] {
+  --color-bg: #f4f2ee;
+  --color-bg-alt: #ececE6;
+  --color-card: #ffffff;
+  --color-text: #161513;
+  --color-text-dim: rgba(22, 21, 19, 0.6);
+  --color-text-faint: rgba(22, 21, 19, 0.4);
+  --color-border: rgba(22, 21, 19, 0.1);
+  --color-border-strong: rgba(22, 21, 19, 0.22);
+  --color-accent: #ff6838;
+  --color-accent-dark: #c8501f;
+  --color-accent-fg: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--color-bg);
+  --color-background-alt: var(--color-bg-alt);
+  --color-card: var(--color-card);
+  --color-foreground: var(--color-text);
+  --color-foreground-dim: var(--color-text-dim);
+  --color-foreground-faint: var(--color-text-faint);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-accent: var(--color-accent);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent-fg: var(--color-accent-fg);
+  --font-display: var(--font-space-grotesk);
+  --font-body: var(--font-inter);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.25s ease, color 0.25s ease;
 }
