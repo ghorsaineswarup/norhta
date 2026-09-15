@@ -1,6 +1,24 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getToken, clearToken } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setLoggedIn(!!getToken());
+  }, []);
+
+  function handleLogout() {
+    clearToken();
+    setLoggedIn(false);
+    router.push("/");
+  }
+
   return (
     <nav className="flex justify-between items-center py-6 border-b border-border">
       <Link
@@ -39,9 +57,20 @@ export default function Navbar() {
 
       <div className="flex gap-5 items-center text-[11px] tracking-[0.1em] text-foreground-dim">
         <span>Search</span>
-        <Link href="/account" className="hover:text-foreground transition-colors">
-          Account
-        </Link>
+        {loggedIn ? (
+          <>
+            <Link href="/account" className="hover:text-foreground transition-colors">
+              Account
+            </Link>
+            <button onClick={handleLogout} className="hover:text-foreground transition-colors">
+              Logout
+            </button>
+          </>
+        ) : (
+          <Link href="/login" className="hover:text-foreground transition-colors">
+            Login
+          </Link>
+        )}
         <Link href="/cart" className="hover:text-foreground transition-colors">
           Cart (0)
         </Link>
