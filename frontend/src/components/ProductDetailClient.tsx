@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Button from "@/components/Button";
+import { useCart } from "@/lib/CartContext";
+import { apiFetch } from "@/lib/api";
 
 type Product = {
   name: string;
@@ -17,12 +19,20 @@ type Product = {
 
 const TABS = ["Description", "Specs", "Shipping"] as const;
 
-export default function ProductDetailClient({ product }: { product: Product }) {
+export default function ProductDetailClient({
+  product,
+  productId,
+}: {
+  product: Product;
+  productId: string;
+}) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Description");
   const [selectedVariant, setSelectedVariant] = useState(
     product.variants?.[0]?.sku || null
   );
+  const [cartMessage, setCartMessage] = useState("");
+  const { addToCart } = useCart();
 
   const availableStock = selectedVariant
     ? product.variants.find((v) => v.sku === selectedVariant)?.stock ?? product.stock
@@ -119,11 +129,33 @@ export default function ProductDetailClient({ product }: { product: Product }) {
         </div>
 
         <div className="flex gap-3 mt-7">
-          <Button variant="primary" className="flex-1" disabled={availableStock === 0}>
+          <Button
+            variant="primary"
+            className="flex-1"
+            disabled={availableStock === 0}
+            onClick={async () => {
+              const error = await addToCart(productId, quantity, selectedVariant || undefined);
+              setCartMessage(error || "Added to cart");
+              setTimeout(() => setCartMessage(""), 3000);
+            }}
+          >
             {availableStock === 0 ? "Out of stock" : "Add to cart"}
           </Button>
-          <Button variant="ghost">♡ Wishlist</Button>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              await apiFetch("/wishlist/add", {
+                method: "POST",
+                body: JSON.stringify({ productId }),
+              });
+              setCartMessage("Added to wishlist");
+              setTimeout(() => setCartMessage(""), 3000);
+            }}
+          >
+            ♡ Wishlist
+          </Button>
         </div>
+        {cartMessage && <p className="text-sm mt-3 text-accent">{cartMessage}</p>}
 
         <div className="flex gap-7 border-b border-border mt-10">
           {TABS.map((tab) => (

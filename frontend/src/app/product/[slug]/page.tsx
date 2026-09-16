@@ -65,7 +65,7 @@ export default async function ProductPage({
     <Container>
       <Navbar />
 
-      <ProductDetailClient product={product} />
+      <ProductDetailClient product={product} productId={product._id} />
 
       {related.length > 0 && (
         <section className="py-16 border-t border-border">

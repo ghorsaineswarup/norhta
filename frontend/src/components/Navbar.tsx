@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getToken, clearToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/lib/CartContext";
 
 export default function Navbar() {
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
+  const { itemCount } = useCart();
 
   useEffect(() => {
     setLoggedIn(!!getToken());
@@ -72,7 +74,7 @@ export default function Navbar() {
           </Link>
         )}
         <Link href="/cart" className="hover:text-foreground transition-colors">
-          Cart (0)
+          Cart ({itemCount})
         </Link>
       </div>
     </nav>
