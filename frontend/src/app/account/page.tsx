@@ -23,6 +23,15 @@ type WishlistProduct = {
   price: number;
 };
 
+type Order = {
+  _id: string;
+  total: number;
+  orderStatus: string;
+  paymentStatus: string;
+  createdAt: string;
+  items: { name: string; quantity: number; price: number }[];
+};
+
 const TABS = ["Orders", "Wishlist", "Profile"] as const;
 
 export default function AccountPage() {
@@ -32,6 +41,8 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Orders");
   const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   useEffect(() => {
     const token = getToken();
@@ -62,6 +73,15 @@ export default function AccountPage() {
       .then((res) => res.json())
       .then((data) => setWishlist(data.products || []))
       .finally(() => setWishlistLoading(false));
+  }, [activeTab, user]);
+
+  useEffect(() => {
+    if (activeTab !== "Orders" || !user) return;
+    setOrdersLoading(true);
+    apiFetch("/orders/my-orders")
+      .then((res) => res.json())
+      .then((data) => setOrders(Array.isArray(data) ? data : []))
+      .finally(() => setOrdersLoading(false));
   }, [activeTab, user]);
 
   async function removeFromWishlist(productId: string) {
@@ -106,7 +126,42 @@ export default function AccountPage() {
         </div>
 
         {activeTab === "Orders" && (
-          <p className="text-foreground-faint text-sm">No orders yet.</p>
+          <div>
+            {ordersLoading ? (
+              <p className="text-foreground-faint text-sm">Loading...</p>
+            ) : orders.length === 0 ? (
+              <p className="text-foreground-faint text-sm">No expeditions yet.</p>
+            ) : (
+              <div className="max-w-lg space-y-3">
+                {orders.map((order) => (
+                  <div
+                    key={order._id}
+                    className="bg-card border border-border rounded-lg p-5"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-[family-name:var(--font-display)] text-sm">
+                        #{order._id.slice(-8).toUpperCase()}
+                      </span>
+                      <span className="text-[11px] tracking-[0.08em] uppercase text-accent border border-accent rounded-full px-3 py-1">
+                        {order.orderStatus}
+                      </span>
+                    </div>
+                    <div className="text-xs text-foreground-faint mb-3">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </div>
+                    {order.items.map((item, i) => (
+                      <div key={i} className="text-sm text-foreground-dim">
+                        {item.name} × {item.quantity}
+                      </div>
+                    ))}
+                    <div className="text-sm mt-2 pt-2 border-t border-border">
+                      Total: <span className="text-accent">NPR {order.total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === "Wishlist" && (
