@@ -2,23 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getToken, clearToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/CartContext";
+import { apiFetch } from "@/lib/api";
 
 export default function Navbar() {
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
-  const { itemCount } = useCart();
+  const { itemCount, refreshCart } = useCart();
 
   useEffect(() => {
-    setLoggedIn(!!getToken());
+    apiFetch("/auth/me")
+      .then((res) => setLoggedIn(res.ok))
+      .catch(() => setLoggedIn(false));
   }, []);
 
-  function handleLogout() {
-    clearToken();
+  async function handleLogout() {
+    await apiFetch("/auth/logout", { method: "POST" });
     setLoggedIn(false);
+    await refreshCart();
     router.push("/");
+    router.refresh();
   }
 
   return (

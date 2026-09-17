@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { apiFetch } from "./api";
-import { getToken } from "./auth";
 
 type CartItem = {
   product: { _id: string; name: string; slug: string; price: number; images: string[] };
@@ -27,10 +26,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   async function refreshCart() {
-    if (!getToken()) {
-      setItems([]);
-      return;
-    }
     setLoading(true);
     try {
       const res = await apiFetch("/cart");
@@ -46,15 +41,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   async function addToCart(productId: string, quantity: number, variantSku?: string) {
-    if (!getToken()) return "Please log in first";
-
     const res = await apiFetch("/cart/add", {
       method: "POST",
       body: JSON.stringify({ productId, quantity, variantSku }),
     });
     const data = await res.json();
 
-    if (!res.ok) return data.message || "Could not add to cart";
+    if (!res.ok) {
+      if (res.status === 401) return "Please log in first";
+      return data.message || "Could not add to cart";
+    }
 
     setItems(data.items || []);
     return null;

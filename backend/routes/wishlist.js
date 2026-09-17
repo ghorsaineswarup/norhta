@@ -5,9 +5,10 @@ const { z } = require('zod');
 const Wishlist = require('../models/Wishlist');
 const Product = require('../models/Product');
 const validate = require('../middleware/validate');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireCsrf } = require('../middleware/auth');
 
 router.use(requireAuth);
+router.use(requireCsrf);
 
 const addSchema = z.object({ productId: z.string().min(1) });
 

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Container from "@/components/Container";
 import Footer from "@/components/Footer";
-import { getToken, clearToken } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 
 type UserInfo = {
@@ -45,22 +44,13 @@ export default function AccountPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiFetch("/auth/me")
       .then((res) => {
         if (!res.ok) throw new Error("Not authenticated");
         return res.json();
       })
       .then((data) => setUser(data))
       .catch(() => {
-        clearToken();
         router.push("/login");
       })
       .finally(() => setLoading(false));

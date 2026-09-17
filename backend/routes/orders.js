@@ -5,10 +5,11 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const validate = require('../middleware/validate');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireCsrf } = require('../middleware/auth');
 const { checkoutSchema } = require('../schemas/orderSchemas');
 
 router.use(requireAuth);
+router.use(requireCsrf);
 
 function calculateShipping(city, subtotal) {
   if (subtotal >= 10000) return 0;
@@ -25,8 +26,6 @@ router.post('/', validate(checkoutSchema), async (req, res) => {
       return res.status(400).json({ message: 'Cart is empty' });
     }
 
-    // Re-validate every item against the live database — the cart's stored
-    // price/stock could be stale by the time checkout happens.
     const orderItems = [];
     let subtotal = 0;
     const stockUpdates = [];
@@ -70,9 +69,6 @@ router.post('/', validate(checkoutSchema), async (req, res) => {
     const discount = 0; // coupon support lands on Day 11
     const total = subtotal - discount + shippingCost;
 
-    // Atomic stock deduction: each update includes its own stock-sufficiency
-    // check in the filter, so a race with another concurrent order can't
-    // push stock negative.
     for (const update of stockUpdates) {
       let result;
       if (update.variantSku) {
@@ -100,7 +96,7 @@ router.post('/', validate(checkoutSchema), async (req, res) => {
       shippingCost,
       total,
       paymentMethod,
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
+      paymentStatus: 'pending',
       orderStatus: 'pending',
     });
 

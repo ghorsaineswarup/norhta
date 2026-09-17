@@ -6,8 +6,8 @@ import Navbar from "@/components/Navbar";
 import Container from "@/components/Container";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
-import { saveToken } from "@/lib/auth";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,9 +21,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const res = await apiFetch("/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
       const data = await res.json();
@@ -33,8 +32,8 @@ export default function RegisterPage() {
         return;
       }
 
-      saveToken(data.token);
       router.push("/account");
+      router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

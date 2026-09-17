@@ -5,7 +5,7 @@ const { z } = require('zod');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const validate = require('../middleware/validate');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireCsrf } = require('../middleware/auth');
 
 const itemSchema = z.object({
   productId: z.string().min(1),
@@ -16,6 +16,7 @@ const itemSchema = z.object({
 // Every cart route requires a real session — a cart belongs to req.user, never
 // to whatever userId the client might try to send in the body.
 router.use(requireAuth);
+router.use(requireCsrf);
 
 async function resolveItem(productId, variantSku, quantity) {
   const product = await Product.findOne({ _id: productId, active: true });

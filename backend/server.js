@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
+const cookieParser = require('cookie-parser');
 
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
@@ -20,7 +21,8 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
+app.use(cookieParser());
 app.use(mongoSanitize());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
 

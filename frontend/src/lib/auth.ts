@@ -1,14 +1,5 @@
-const TOKEN_KEY = "norhta_token";
-
-export function saveToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
+export function clearAuth() {
+  // Auth now lives in an httpOnly cookie set by the server.
+  // Actual logout happens via a call to /auth/logout (see CartContext / Navbar).
+  // This function exists so any old callers don't break during the transition.
 }

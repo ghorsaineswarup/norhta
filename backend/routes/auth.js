@@ -5,7 +5,7 @@ const router = express.Router();
 const User = require('../models/User');
 const validate = require('../middleware/validate');
 const { requireAuth } = require('../middleware/auth');
-const { signToken } = require('../utils/token');
+const { signToken, generateCsrfToken } = require('../utils/token');
 const { registerSchema, loginSchema } = require('../schemas/authSchemas');
 
 const loginLimiter = rateLimit({
@@ -13,6 +13,22 @@ const loginLimiter = rateLimit({
   max: 10,
   message: { message: 'Too many attempts, try again later' },
 });
+
+function setAuthCookies(res, token) {
+  const csrfToken = generateCsrfToken();
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  res.cookie('csrfToken', csrfToken, {
+    httpOnly: false, // frontend JS needs to read this one to echo it back
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
 
 router.post('/register', validate(registerSchema), async (req, res) => {
   try {
@@ -25,9 +41,9 @@ router.post('/register', validate(registerSchema), async (req, res) => {
 
     const user = await User.create({ name, email, password, phone });
     const token = signToken(user._id);
+    setAuthCookies(res, token);
 
     res.status(201).json({
-      token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
@@ -48,14 +64,21 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res) => {
     }
 
     const token = signToken(user._id);
+    setAuthCookies(res, token);
+
     res.json({
-      token,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Something went wrong' });
   }
+});
+
+router.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.clearCookie('csrfToken');
+  res.json({ message: 'Logged out' });
 });
 
 router.get('/me', requireAuth, (req, res) => {
