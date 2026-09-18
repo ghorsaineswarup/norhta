@@ -24,7 +24,7 @@ app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 app.use(mongoSanitize());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200 }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 1000 }));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
