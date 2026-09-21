@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "@/components/Button";
 import { useCart } from "@/lib/CartContext";
 import { apiFetch } from "@/lib/api";
@@ -15,6 +15,16 @@ type Product = {
   stock: number;
   variants: { sku: string; color?: string; size?: string; stock: number }[];
   category?: { name: string };
+};
+
+type Review = {
+  _id: string;
+  user: { name: string };
+  rating: number;
+  title?: string;
+  comment?: string;
+  verifiedPurchase: boolean;
+  createdAt: string;
 };
 
 const TABS = ["Description", "Specs", "Shipping"] as const;
@@ -34,6 +44,13 @@ export default function ProductDetailClient({
   const [cartMessage, setCartMessage] = useState("");
   const { addToCart } = useCart();
 
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: "", comment: "" });
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
   const availableStock = selectedVariant
     ? product.variants.find((v) => v.sku === selectedVariant)?.stock ?? product.stock
     : product.stock;
@@ -41,6 +58,45 @@ export default function ProductDetailClient({
   const colors = Array.from(
     new Set(product.variants?.map((v) => v.color).filter(Boolean))
   );
+
+  useEffect(() => {
+    apiFetch(`/reviews/${productId}`)
+      .then((res) => res.json())
+      .then((data) => setReviews(Array.isArray(data) ? data : []))
+      .finally(() => setReviewsLoading(false));
+  }, [productId]);
+
+  async function handleReviewSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setReviewError("");
+    setReviewSubmitting(true);
+
+    try {
+      const res = await apiFetch("/reviews", {
+        method: "POST",
+        body: JSON.stringify({
+          productId,
+          rating: reviewForm.rating,
+          title: reviewForm.title,
+          comment: reviewForm.comment,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setReviewError(data.message || "Could not submit review");
+        return;
+      }
+
+      setReviews((prev) => [data, ...prev]);
+      setShowReviewForm(false);
+      setReviewForm({ rating: 5, title: "", comment: "" });
+    } catch {
+      setReviewError("Something went wrong. Please try again.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
 
   return (
     <section className="py-10 grid grid-cols-1 md:grid-cols-2 gap-14">
@@ -190,6 +246,86 @@ export default function ProductDetailClient({
           )}
           {activeTab === "Shipping" &&
             "Kathmandu Valley: NPR 100. Outside Valley: NPR 200. Free shipping on orders above NPR 10,000."}
+        </div>
+
+        <div className="mt-10 pt-8 border-t border-border">
+          <div className="flex justify-between items-center mb-5">
+            <h2 className="font-[family-name:var(--font-display)] text-[11px] tracking-[0.2em] uppercase text-foreground-faint">
+              Reviews {reviews.length > 0 && `(${reviews.length})`}
+            </h2>
+            <button
+              onClick={() => setShowReviewForm((s) => !s)}
+              className="text-xs text-accent hover:underline"
+            >
+              {showReviewForm ? "Cancel" : "Write a review"}
+            </button>
+          </div>
+
+          {showReviewForm && (
+            <form onSubmit={handleReviewSubmit} className="bg-card border border-border rounded-lg p-5 mb-6">
+              <div className="mb-3">
+                <div className="text-[11px] tracking-[0.1em] uppercase text-foreground-faint mb-2">
+                  Rating
+                </div>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      type="button"
+                      key={n}
+                      onClick={() => setReviewForm({ ...reviewForm, rating: n })}
+                      className={n <= reviewForm.rating ? "text-accent" : "text-foreground-faint"}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <input
+                placeholder="Title (optional)"
+                value={reviewForm.title}
+                onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                className="w-full bg-transparent border border-border-strong rounded-md px-3 py-2.5 text-sm mb-3"
+              />
+              <textarea
+                placeholder="Your review (optional)"
+                value={reviewForm.comment}
+                onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                rows={3}
+                className="w-full bg-transparent border border-border-strong rounded-md px-3 py-2.5 text-sm mb-3"
+              />
+              {reviewError && <p className="text-accent text-xs mb-3">{reviewError}</p>}
+              <Button variant="primary" disabled={reviewSubmitting}>
+                {reviewSubmitting ? "Submitting..." : "Submit review"}
+              </Button>
+            </form>
+          )}
+
+          {reviewsLoading ? (
+            <p className="text-foreground-faint text-sm">Loading reviews...</p>
+          ) : reviews.length === 0 ? (
+            <p className="text-foreground-faint text-sm">No reviews yet.</p>
+          ) : (
+            <div className="space-y-5">
+              {reviews.map((r) => (
+                <div key={r._id} className="border-b border-border pb-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-accent text-sm">{"★".repeat(r.rating)}</span>
+                    <span className="text-foreground-faint text-xs">{"★".repeat(5 - r.rating)}</span>
+                    {r.verifiedPurchase && (
+                      <span className="text-[10px] tracking-[0.08em] uppercase text-accent border border-accent rounded-full px-2 py-0.5 ml-2">
+                        Verified purchase
+                      </span>
+                    )}
+                  </div>
+                  {r.title && <div className="text-sm font-medium">{r.title}</div>}
+                  {r.comment && <p className="text-foreground-dim text-sm mt-1">{r.comment}</p>}
+                  <div className="text-foreground-faint text-xs mt-2">
+                    {r.user?.name || "Anonymous"} · {new Date(r.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
