@@ -4,6 +4,7 @@ const router = express.Router();
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const Coupon = require('../models/Coupon');
 const validate = require('../middleware/validate');
 const { requireAuth, requireCsrf } = require('../middleware/auth');
 const { checkoutSchema } = require('../schemas/orderSchemas');
@@ -66,7 +67,25 @@ router.post('/', validate(checkoutSchema), async (req, res) => {
     }
 
     const shippingCost = calculateShipping(shippingAddress.city, subtotal);
-    const discount = 0; // coupon support lands on Day 11
+
+    let discount = 0;
+    let appliedCoupon = null;
+    if (req.body.couponCode) {
+      const coupon = await Coupon.findOne({ code: req.body.couponCode.toUpperCase(), active: true });
+      if (
+        coupon &&
+        (!coupon.expiresAt || coupon.expiresAt > new Date()) &&
+        (!coupon.maxUses || coupon.usedCount < coupon.maxUses) &&
+        subtotal >= coupon.minimumOrder
+      ) {
+        discount =
+          coupon.discountType === 'percentage'
+            ? Math.round((subtotal * coupon.discountValue) / 100)
+            : Math.min(coupon.discountValue, subtotal);
+        appliedCoupon = coupon;
+      }
+    }
+
     const total = subtotal - discount + shippingCost;
 
     for (const update of stockUpdates) {
@@ -98,7 +117,13 @@ router.post('/', validate(checkoutSchema), async (req, res) => {
       paymentMethod,
       paymentStatus: 'pending',
       orderStatus: 'pending',
+      coupon: appliedCoupon?._id,
     });
+
+    if (appliedCoupon) {
+      appliedCoupon.usedCount += 1;
+      await appliedCoupon.save();
+    }
 
     cart.items = [];
     await cart.save();

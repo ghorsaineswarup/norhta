@@ -238,7 +238,20 @@ export default function AdminProductsPage() {
                   <td className="py-3">{p.name}</td>
                   <td className="py-3">{p.category?.name || "—"}</td>
                   <td className="py-3">NPR {p.price.toLocaleString()}</td>
-                  <td className="py-3">{p.stock}</td>
+                  <td className="py-3">
+  {p.stock}{" "}
+  <span
+    className={
+      p.stock === 0
+        ? "text-accent text-xs"
+        : p.stock < 5
+        ? "text-orange-400 text-xs"
+        : "text-foreground-faint text-xs"
+    }
+  >
+    ({p.stock === 0 ? "Out of stock" : p.stock < 5 ? "Low stock" : "In stock"})
+  </span>
+</td>
                   <td className="py-3">
                     <span className={p.active ? "text-accent" : "text-foreground-faint"}>
                       {p.active ? "Active" : "Inactive"}
