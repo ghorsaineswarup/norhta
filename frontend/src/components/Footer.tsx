@@ -31,8 +31,8 @@ const footerColumns = [
     title: "Account",
     links: [
       { label: "Login", href: "/login" },
-      { label: "Orders", href: "/account/orders" },
-      { label: "Wishlist", href: "/account/wishlist" },
+      { label: "Orders", href: "/account" },
+      { label: "Wishlist", href: "/account" },
     ],
   },
 ];
