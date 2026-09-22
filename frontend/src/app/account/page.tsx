@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Container from "@/components/Container";
 import Footer from "@/components/Footer";
 import { apiFetch } from "@/lib/api";
+import OrderTimeline from "@/components/OrderTimeline";
 
 type UserInfo = {
   id: string;
@@ -132,12 +133,12 @@ export default function AccountPage() {
                       <span className="font-[family-name:var(--font-display)] text-sm">
                         #{order._id.slice(-8).toUpperCase()}
                       </span>
-                      <span className="text-[11px] tracking-[0.08em] uppercase text-accent border border-accent rounded-full px-3 py-1">
-                        {order.orderStatus}
-                      </span>
                     </div>
-                    <div className="text-xs text-foreground-faint mb-3">
+                    <div className="text-xs text-foreground-faint mb-4">
                       {new Date(order.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="mb-4">
+                      <OrderTimeline status={order.orderStatus} />
                     </div>
                     {order.items.map((item, i) => (
                       <div key={i} className="text-sm text-foreground-dim">

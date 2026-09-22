@@ -135,6 +135,31 @@ router.post('/', validate(checkoutSchema), async (req, res) => {
   }
 });
 
+router.post('/:id/pay', async (req, res) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    if (order.paymentMethod === 'cod') {
+      return res.status(400).json({ message: 'This order is Cash on Delivery' });
+    }
+    if (order.paymentStatus === 'paid') {
+      return res.status(400).json({ message: 'Order already paid' });
+    }
+
+    // Sandbox/demo payment confirmation — no real gateway integration.
+    // In production this would verify a signed callback from eSewa/Khalti.
+    order.paymentStatus = 'paid';
+    order.orderStatus = 'confirmed';
+    await order.save();
+
+    res.json(order);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Something went wrong' });
+  }
+});
+
 router.get('/my-orders', async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });

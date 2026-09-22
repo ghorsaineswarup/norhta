@@ -65,7 +65,11 @@ export default function CheckoutPage() {
       }
 
       await refreshCart();
-      router.push(`/order-confirmation/${data._id}`);
+      if (paymentMethod === "cod") {
+        router.push(`/order-confirmation/${data._id}`);
+      } else {
+        router.push(`/payment/${data._id}`);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
