@@ -8,6 +8,7 @@ type Product = {
   slug: string;
   name: string;
   price: number;
+  images?: string[];
   category?: { name: string; slug: string };
 };
 
@@ -81,6 +82,8 @@ export default async function ShopPage({
                     slug={p.slug}
                     name={p.name}
                     price={`NPR ${p.price.toLocaleString()}`}
+                    image={p.images?.[0]}
+
                   />
                 ))}
               </div>

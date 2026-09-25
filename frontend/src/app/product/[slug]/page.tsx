@@ -79,6 +79,8 @@ export default async function ProductPage({
                 slug={p.slug}
                 name={p.name}
                 price={`NPR ${p.price.toLocaleString()}`}
+                image={p.images?.[0]}
+
               />
             ))}
           </div>
