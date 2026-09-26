@@ -5,6 +5,7 @@ import Button from "@/components/Button";
 import SectionTitle from "@/components/SectionTitle";
 import ProductCard from "@/components/ProductCard";
 import HomeClient from "@/components/HomeClient";
+import NewsletterForm from "@/components/NewsletterForm";
 
 type FeaturedProduct = {
   slug: string;
@@ -141,14 +142,7 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="flex gap-3 w-full md:w-auto">
-            <input
-              placeholder="your@email.com"
-              className="bg-transparent border border-border-strong rounded-full px-5 py-3.5 text-sm flex-1 md:w-64 focus:outline-none focus:border-accent"
-            />
-
-            <Button variant="primary">Join</Button>
-          </div>
+          <NewsletterForm />
         </section>
 
         <Footer />
