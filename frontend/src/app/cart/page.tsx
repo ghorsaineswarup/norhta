@@ -43,13 +43,21 @@ export default function CartPage() {
                 key={`${item.product._id}-${item.variantSku || ""}`}
                 className="flex gap-4 py-5 border-b border-border"
               >
-                <div
-                  className="w-16 h-16 rounded-md flex-shrink-0"
-                  style={{
-                    background: "linear-gradient(135deg, var(--color-accent), transparent 70%)",
-                    opacity: 0.14,
-                  }}
-                />
+                {item.product.images?.[0] ? (
+                  <img
+                    src={item.product.images[0]}
+                    alt={item.product.name}
+                    className="w-16 h-16 rounded-md flex-shrink-0 object-cover"
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-md flex-shrink-0"
+                    style={{
+                      background: "linear-gradient(135deg, var(--color-accent), transparent 70%)",
+                      opacity: 0.14,
+                    }}
+                  />
+                )}
                 <div className="flex-1">
                   <div className="text-sm">{item.product.name}</div>
                   <div className="text-xs text-foreground-faint mt-1">

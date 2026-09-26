@@ -209,8 +209,8 @@ export default function AdminProductsPage() {
               {error && <p className="text-accent text-sm mb-4">{error}</p>}
 
               <div className="flex gap-3">
-                <Button variant="primary">{editingId ? "Save changes" : "Create product"}</Button>
-                <Button variant="ghost" onClick={() => setShowForm(false)}>
+                <Button type="submit" variant="primary">{editingId ? "Save changes" : "Create product"}</Button>
+                <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>
                   Cancel
                 </Button>
               </div>

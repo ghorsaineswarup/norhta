@@ -152,7 +152,7 @@ export default function CheckoutPage() {
             </div>
 
             {error && <p className="text-accent text-sm mb-4">{error}</p>}
-            <Button variant="primary" className="w-full" disabled={loading}>
+            <Button type="submit" variant="primary" className="w-full" disabled={loading}>
               {loading ? "Placing order..." : "Place order"}
             </Button>
           </form>

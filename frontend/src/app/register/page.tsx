@@ -71,7 +71,7 @@ export default function RegisterPage() {
             required
           />
           {error && <p className="text-accent text-sm mb-4">{error}</p>}
-          <Button variant="primary" className="w-full mt-2" disabled={loading}>
+          <Button type="submit" variant="primary" className="w-full mt-2" disabled={loading}>
             {loading ? "Creating account..." : "Create account"}
           </Button>
         </form>

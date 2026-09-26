@@ -11,7 +11,7 @@ type FeaturedProduct = {
   name: string;
   price: number;
   images?: string[];
-   featured: boolean;
+  featured: boolean;
 
 };
 

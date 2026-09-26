@@ -19,15 +19,19 @@ function setAuthCookies(res, token) {
   res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
+    path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
   res.cookie('csrfToken', csrfToken, {
-    httpOnly: false, // frontend JS needs to read this one to echo it back
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
+    path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
+  res.setHeader('X-CSRF-Token', csrfToken);
+  return csrfToken;
 }
 
 router.post('/register', validate(registerSchema), async (req, res) => {
@@ -64,10 +68,11 @@ router.post('/login', loginLimiter, validate(loginSchema), async (req, res) => {
     }
 
     const token = signToken(user._id);
-    setAuthCookies(res, token);
+    const csrfToken = setAuthCookies(res, token);
 
     res.json({
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      csrfToken,
     });
   } catch (err) {
     console.error(err);

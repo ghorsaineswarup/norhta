@@ -425,7 +425,7 @@ export default function ProductDetailClient({
                 </p>
               )}
 
-              <Button variant="primary" disabled={reviewSubmitting}>
+              <Button type="submit" variant="primary" disabled={reviewSubmitting}>
                 {reviewSubmitting ? "Submitting..." : "Submit review"}
               </Button>
             </form>

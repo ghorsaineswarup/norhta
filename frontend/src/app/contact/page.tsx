@@ -31,7 +31,7 @@ export default function ContactPage() {
             <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
             <Input label="Subject" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required />
             <Input label="Message" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required />
-            <Button variant="primary" className="w-full mt-2">Send</Button>
+            <Button type="submit" variant="primary" className="w-full mt-2">Send</Button>
           </form>
         )}
       </div>

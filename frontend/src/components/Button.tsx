@@ -8,6 +8,7 @@ type ButtonProps = {
   children: ReactNode;
   className?: string;
   disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 };
 
 export default function Button({
@@ -17,6 +18,7 @@ export default function Button({
   children,
   className = "",
   disabled = false,
+  type = "button",
 }: ButtonProps) {
   const base =
     "inline-flex items-center justify-center font-[family-name:var(--font-display)] text-[11px] tracking-[0.2em] uppercase px-7 py-3.5 rounded-full transition-all duration-200";
@@ -49,7 +51,7 @@ export default function Button({
 
   return (
     <button
-      type="button"
+      type={type}
       onClick={onClick}
       className={classes}
       disabled={disabled}
