@@ -13,7 +13,12 @@ type Product = {
   images: string[];
   specifications?: Record<string, string>;
   stock: number;
-  variants: { sku: string; color?: string; size?: string; stock: number }[];
+  variants: {
+    sku: string;
+    color?: string;
+    size?: string;
+    stock: number;
+  }[];
   category?: { name: string };
 };
 
@@ -37,22 +42,32 @@ export default function ProductDetailClient({
   productId: string;
 }) {
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Description");
+  const [activeTab, setActiveTab] =
+    useState<(typeof TABS)[number]>("Description");
+
   const [selectedVariant, setSelectedVariant] = useState(
     product.variants?.[0]?.sku || null
   );
+
+  const [selectedImage, setSelectedImage] = useState(0);
+
   const [cartMessage, setCartMessage] = useState("");
   const { addToCart } = useCart();
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, title: "", comment: "" });
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    title: "",
+    comment: "",
+  });
   const [reviewError, setReviewError] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   const availableStock = selectedVariant
-    ? product.variants.find((v) => v.sku === selectedVariant)?.stock ?? product.stock
+    ? product.variants.find((v) => v.sku === selectedVariant)?.stock ??
+      product.stock
     : product.stock;
 
   const colors = Array.from(
@@ -64,6 +79,10 @@ export default function ProductDetailClient({
       .then((res) => res.json())
       .then((data) => setReviews(Array.isArray(data) ? data : []))
       .finally(() => setReviewsLoading(false));
+  }, [productId]);
+
+  useEffect(() => {
+    setSelectedImage(0);
   }, [productId]);
 
   async function handleReviewSubmit(e: React.FormEvent) {
@@ -81,6 +100,7 @@ export default function ProductDetailClient({
           comment: reviewForm.comment,
         }),
       });
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -98,23 +118,72 @@ export default function ProductDetailClient({
     }
   }
 
+  const hasImages = Array.isArray(product.images) && product.images.length > 0;
+
+  const mainImage = hasImages
+    ? product.images[selectedImage] || product.images[0]
+    : null;
+
   return (
     <section className="py-10 grid grid-cols-1 md:grid-cols-2 gap-14">
       <div>
-        <div
-          className="aspect-square rounded-xl"
-          style={{
-            background: "linear-gradient(135deg, var(--color-accent) 0%, transparent 70%)",
-            opacity: 0.14,
-          }}
-        />
-        <div className="grid grid-cols-4 gap-2.5 mt-3">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="aspect-square bg-card border border-border rounded-md"
+        {/* Main product image */}
+        <div className="aspect-square rounded-xl overflow-hidden bg-card border border-border">
+          {mainImage ? (
+            <img
+              src={mainImage}
+              alt={product.name}
+              className="w-full h-full object-cover"
             />
-          ))}
+          ) : (
+            <div
+              className="w-full h-full"
+              style={{
+                background:
+                  "linear-gradient(135deg, var(--color-accent) 0%, transparent 70%)",
+                opacity: 0.14,
+              }}
+            />
+          )}
+        </div>
+
+        {/* Product thumbnails */}
+        <div className="grid grid-cols-4 gap-2.5 mt-3">
+          {[0, 1, 2, 3].map((i) => {
+            const image = product.images?.[i];
+
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  if (image) {
+                    setSelectedImage(i);
+                  }
+                }}
+                disabled={!image}
+                className={`aspect-square overflow-hidden rounded-md border ${
+                  selectedImage === i && image
+                    ? "border-accent"
+                    : "border-border"
+                } ${
+                  image
+                    ? "cursor-pointer hover:border-accent"
+                    : "cursor-default"
+                }`}
+              >
+                {image ? (
+                  <img
+                    src={image}
+                    alt={`${product.name} view ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-card" />
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -124,12 +193,17 @@ export default function ProductDetailClient({
             {product.category.name}
           </div>
         )}
+
         <h1 className="font-[family-name:var(--font-display)] font-bold text-3xl uppercase tracking-[0.04em]">
           {product.name}
         </h1>
+
         {product.shortDescription && (
-          <p className="text-foreground-dim mt-2">{product.shortDescription}</p>
+          <p className="text-foreground-dim mt-2">
+            {product.shortDescription}
+          </p>
         )}
+
         <div className="font-[family-name:var(--font-display)] text-2xl text-accent mt-5">
           NPR {product.price.toLocaleString()}
         </div>
@@ -139,6 +213,7 @@ export default function ProductDetailClient({
             <div className="text-[11px] tracking-[0.1em] uppercase text-foreground-faint mb-2.5">
               Color
             </div>
+
             <div className="flex gap-2.5">
               {product.variants.map((v) => (
                 <button
@@ -162,6 +237,7 @@ export default function ProductDetailClient({
           <div className="text-[11px] tracking-[0.1em] uppercase text-foreground-faint mb-2.5">
             Quantity
           </div>
+
           <div className="flex items-center gap-3">
             <div className="flex items-center border border-border-strong rounded-md">
               <button
@@ -170,16 +246,23 @@ export default function ProductDetailClient({
               >
                 −
               </button>
+
               <span className="px-2 text-sm">{quantity}</span>
+
               <button
-                onClick={() => setQuantity((q) => Math.min(availableStock, q + 1))}
+                onClick={() =>
+                  setQuantity((q) => Math.min(availableStock, q + 1))
+                }
                 className="px-4 py-2.5 text-lg"
               >
                 +
               </button>
             </div>
+
             <span className="text-xs text-foreground-faint">
-              {availableStock > 0 ? `${availableStock} in stock` : "Out of stock"}
+              {availableStock > 0
+                ? `${availableStock} in stock`
+                : "Out of stock"}
             </span>
           </div>
         </div>
@@ -190,13 +273,19 @@ export default function ProductDetailClient({
             className="flex-1"
             disabled={availableStock === 0}
             onClick={async () => {
-              const error = await addToCart(productId, quantity, selectedVariant || undefined);
+              const error = await addToCart(
+                productId,
+                quantity,
+                selectedVariant || undefined
+              );
+
               setCartMessage(error || "Added to cart");
               setTimeout(() => setCartMessage(""), 3000);
             }}
           >
             {availableStock === 0 ? "Out of stock" : "Add to cart"}
           </Button>
+
           <Button
             variant="ghost"
             onClick={async () => {
@@ -204,6 +293,7 @@ export default function ProductDetailClient({
                 method: "POST",
                 body: JSON.stringify({ productId }),
               });
+
               setCartMessage("Added to wishlist");
               setTimeout(() => setCartMessage(""), 3000);
             }}
@@ -211,7 +301,10 @@ export default function ProductDetailClient({
             ♡ Wishlist
           </Button>
         </div>
-        {cartMessage && <p className="text-sm mt-3 text-accent">{cartMessage}</p>}
+
+        {cartMessage && (
+          <p className="text-sm mt-3 text-accent">{cartMessage}</p>
+        )}
 
         <div className="flex gap-7 border-b border-border mt-10">
           {TABS.map((tab) => (
@@ -228,22 +321,28 @@ export default function ProductDetailClient({
             </button>
           ))}
         </div>
+
         <div className="py-6 text-foreground-dim text-sm leading-relaxed">
-          {activeTab === "Description" && (product.description || "No description available.")}
-          {activeTab === "Specs" && (
-            product.specifications && Object.keys(product.specifications).length > 0 ? (
+          {activeTab === "Description" &&
+            (product.description || "No description available.")}
+
+          {activeTab === "Specs" &&
+            (product.specifications &&
+            Object.keys(product.specifications).length > 0 ? (
               <dl className="grid grid-cols-2 gap-y-2.5">
-                {Object.entries(product.specifications).map(([key, value]) => (
-                  <div key={key} className="contents">
-                    <dt className="text-foreground-faint">{key}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
+                {Object.entries(product.specifications).map(
+                  ([key, value]) => (
+                    <div key={key} className="contents">
+                      <dt className="text-foreground-faint">{key}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  )
+                )}
               </dl>
             ) : (
               "No specifications listed."
-            )
-          )}
+            ))}
+
           {activeTab === "Shipping" &&
             "Kathmandu Valley: NPR 100. Outside Valley: NPR 200. Free shipping on orders above NPR 10,000."}
         </div>
@@ -253,6 +352,7 @@ export default function ProductDetailClient({
             <h2 className="font-[family-name:var(--font-display)] text-[11px] tracking-[0.2em] uppercase text-foreground-faint">
               Reviews {reviews.length > 0 && `(${reviews.length})`}
             </h2>
+
             <button
               onClick={() => setShowReviewForm((s) => !s)}
               className="text-xs text-accent hover:underline"
@@ -262,38 +362,69 @@ export default function ProductDetailClient({
           </div>
 
           {showReviewForm && (
-            <form onSubmit={handleReviewSubmit} className="bg-card border border-border rounded-lg p-5 mb-6">
+            <form
+              onSubmit={handleReviewSubmit}
+              className="bg-card border border-border rounded-lg p-5 mb-6"
+            >
               <div className="mb-3">
                 <div className="text-[11px] tracking-[0.1em] uppercase text-foreground-faint mb-2">
                   Rating
                 </div>
+
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       type="button"
                       key={n}
-                      onClick={() => setReviewForm({ ...reviewForm, rating: n })}
-                      className={n <= reviewForm.rating ? "text-accent" : "text-foreground-faint"}
+                      onClick={() =>
+                        setReviewForm({
+                          ...reviewForm,
+                          rating: n,
+                        })
+                      }
+                      className={
+                        n <= reviewForm.rating
+                          ? "text-accent"
+                          : "text-foreground-faint"
+                      }
                     >
                       ★
                     </button>
                   ))}
                 </div>
               </div>
+
               <input
                 placeholder="Title (optional)"
                 value={reviewForm.title}
-                onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                onChange={(e) =>
+                  setReviewForm({
+                    ...reviewForm,
+                    title: e.target.value,
+                  })
+                }
                 className="w-full bg-transparent border border-border-strong rounded-md px-3 py-2.5 text-sm mb-3"
               />
+
               <textarea
                 placeholder="Your review (optional)"
                 value={reviewForm.comment}
-                onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                onChange={(e) =>
+                  setReviewForm({
+                    ...reviewForm,
+                    comment: e.target.value,
+                  })
+                }
                 rows={3}
                 className="w-full bg-transparent border border-border-strong rounded-md px-3 py-2.5 text-sm mb-3"
               />
-              {reviewError && <p className="text-accent text-xs mb-3">{reviewError}</p>}
+
+              {reviewError && (
+                <p className="text-accent text-xs mb-3">
+                  {reviewError}
+                </p>
+              )}
+
               <Button variant="primary" disabled={reviewSubmitting}>
                 {reviewSubmitting ? "Submitting..." : "Submit review"}
               </Button>
@@ -301,26 +432,51 @@ export default function ProductDetailClient({
           )}
 
           {reviewsLoading ? (
-            <p className="text-foreground-faint text-sm">Loading reviews...</p>
+            <p className="text-foreground-faint text-sm">
+              Loading reviews...
+            </p>
           ) : reviews.length === 0 ? (
-            <p className="text-foreground-faint text-sm">No reviews yet.</p>
+            <p className="text-foreground-faint text-sm">
+              No reviews yet.
+            </p>
           ) : (
             <div className="space-y-5">
               {reviews.map((r) => (
-                <div key={r._id} className="border-b border-border pb-5">
+                <div
+                  key={r._id}
+                  className="border-b border-border pb-5"
+                >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-accent text-sm">{"★".repeat(r.rating)}</span>
-                    <span className="text-foreground-faint text-xs">{"★".repeat(5 - r.rating)}</span>
+                    <span className="text-accent text-sm">
+                      {"★".repeat(r.rating)}
+                    </span>
+
+                    <span className="text-foreground-faint text-xs">
+                      {"★".repeat(5 - r.rating)}
+                    </span>
+
                     {r.verifiedPurchase && (
                       <span className="text-[10px] tracking-[0.08em] uppercase text-accent border border-accent rounded-full px-2 py-0.5 ml-2">
                         Verified purchase
                       </span>
                     )}
                   </div>
-                  {r.title && <div className="text-sm font-medium">{r.title}</div>}
-                  {r.comment && <p className="text-foreground-dim text-sm mt-1">{r.comment}</p>}
+
+                  {r.title && (
+                    <div className="text-sm font-medium">
+                      {r.title}
+                    </div>
+                  )}
+
+                  {r.comment && (
+                    <p className="text-foreground-dim text-sm mt-1">
+                      {r.comment}
+                    </p>
+                  )}
+
                   <div className="text-foreground-faint text-xs mt-2">
-                    {r.user?.name || "Anonymous"} · {new Date(r.createdAt).toLocaleDateString()}
+                    {r.user?.name || "Anonymous"} ·{" "}
+                    {new Date(r.createdAt).toLocaleDateString()}
                   </div>
                 </div>
               ))}
