@@ -11,6 +11,8 @@ type FeaturedProduct = {
   name: string;
   price: number;
   images?: string[];
+   featured: boolean;
+
 };
 
 async function getFeaturedProducts(): Promise<FeaturedProduct[]> {

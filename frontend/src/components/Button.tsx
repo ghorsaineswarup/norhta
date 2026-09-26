@@ -7,6 +7,7 @@ type ButtonProps = {
   variant?: "primary" | "ghost";
   children: ReactNode;
   className?: string;
+  disabled?: boolean;
 };
 
 export default function Button({
@@ -15,6 +16,7 @@ export default function Button({
   variant = "primary",
   children,
   className = "",
+  disabled = false,
 }: ButtonProps) {
   const base =
     "inline-flex items-center justify-center font-[family-name:var(--font-display)] text-[11px] tracking-[0.2em] uppercase px-7 py-3.5 rounded-full transition-all duration-200";
@@ -26,18 +28,32 @@ export default function Button({
       "bg-transparent text-foreground border border-border-strong hover:border-foreground",
   };
 
-  const classes = `${base} ${variants[variant]} ${className}`;
+  const disabledStyles = disabled
+    ? "opacity-50 cursor-not-allowed pointer-events-none"
+    : "";
+
+  const classes = `${base} ${variants[variant]} ${disabledStyles} ${className}`;
 
   if (href) {
     return (
-      <Link href={href} className={classes}>
+      <Link
+        href={href}
+        className={classes}
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : undefined}
+      >
         {children}
       </Link>
     );
   }
 
   return (
-    <button onClick={onClick} className={classes}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={classes}
+      disabled={disabled}
+    >
       {children}
     </button>
   );
